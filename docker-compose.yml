@@ -1,0 +1,34 @@
+version: "3.8"
+services:
+  minecraft-server:
+    stdin_open: true
+    tty: true
+    ports:
+      - "25565:25565"
+      - "25575:25575"
+    volumes:
+      - /home/alex/minecraft-data:/data
+    environment:
+      - EULA=true
+      - TYPE=PAPER
+      - VERSION=1.20.6
+      - MEMORY=2G
+      - RCON_PASSWORD=<REDACTED>
+      - MOTD=Any message that you want to show as the server description
+      - REMOVE_OLD_MODS=true
+    image: itzg/minecraft-server
+
+  minecraft-data-backup:
+    volumes:
+      - /home/alex/minecraft-data:/data:ro
+      - ./config:/config/rclone/
+    environment:
+      - EXCLUDES=*.jar,cache,*.tmp
+      - RCON_HOST=minecraft-server
+      - BACKUP_METHOD=rclone
+      - RCLONE_REMOTE=gdrive
+      - RCLONE_DEST_DIR=Minecraft Server Data Backups
+    image: itzg/mc-backup
+    depends_on:
+      minecraft-server:
+        condition: service_healthy
