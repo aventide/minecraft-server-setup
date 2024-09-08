@@ -11,7 +11,7 @@ services:
     environment:
       - EULA=true
       - TYPE=PAPER
-      - VERSION=1.20.6
+      - VERSION=1.21.1
       - MEMORY=2G
       - RCON_PASSWORD=<REDACTED>
       - MOTD=Any message that you want to show as the server description
