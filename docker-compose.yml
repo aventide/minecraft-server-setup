@@ -1,34 +1,46 @@
-version: "3.8"
 services:
+  no-ip-duc:
+    image: ghcr.io/noipcom/noip-duc
+    restart: unless-stopped
+    env_file:
+      - .env
+
   minecraft-server:
+    image: itzg/minecraft-server
     stdin_open: true
     tty: true
     ports:
       - "25565:25565"
       - "25575:25575"
     volumes:
-      - /home/alex/minecraft-data:/data
+      - /home/alex/minecraft-data:/data:Z
     environment:
-      - EULA=true
-      - TYPE=PAPER
-      - VERSION=1.21.1
-      - MEMORY=2G
-      - RCON_PASSWORD=<REDACTED>
-      - MOTD=Any message that you want to show as the server description
-      - REMOVE_OLD_MODS=true
-    image: itzg/minecraft-server
+      EULA: true
+      TYPE: PAPER
+      VERSION: 1.21.11
+      MEMORY: 2G
+      RCON_PASSWORD: "<REDACTED>"
+      MOTD: "WELCOME TO THE JUNGLE, PUNK"
+      REMOVE_OLD_MODS: true
+    # userns_mode: "keep-id"
+    healthcheck:
+      test: ["CMD-SHELL", "mc-health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 10
+      start_period: 60s
 
   minecraft-data-backup:
+    image: itzg/mc-backup
     volumes:
       - /home/alex/minecraft-data:/data:ro
-      - ./config:/config/rclone/
+      - ./config:/config/rclone:Z
     environment:
-      - EXCLUDES=*.jar,cache,*.tmp
-      - RCON_HOST=minecraft-server
-      - BACKUP_METHOD=rclone
-      - RCLONE_REMOTE=gdrive
-      - RCLONE_DEST_DIR=Minecraft Server Data Backups
-    image: itzg/mc-backup
+      EXCLUDES: "*.jar,cache,*.tmp"
+      RCON_HOST: minecraft-server
+      BACKUP_METHOD: rclone
+      RCLONE_REMOTE: gdrive
+      RCLONE_DEST_DIR: "Minecraft Server Data Backups"
     depends_on:
-      minecraft-server:
-        condition: service_healthy
+      - minecraft-server
+    restart: unless-stopped
