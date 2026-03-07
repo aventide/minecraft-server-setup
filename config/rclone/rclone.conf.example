@@ -1,0 +1,6 @@
+[gdrive]
+type = drive
+client_id = EXAMPLE_GOOGLE_CLIENT_ID
+scope = drive
+client_secret = EXAMPLE_GOOGLE_CLIENT_SECRET
+token = {"access_token":"EXAMPLE_ACCESS_TOKEN","token_type":"Bearer","refresh_token":"EXAMPLE_REFRESH_TOKEN","expiry":"EXAMPLE_EXPIRY_TIMESTAMP","expires_in":3599}

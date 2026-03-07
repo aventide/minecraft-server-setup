@@ -1,0 +1,9 @@
+services:
+    minecraft-server:
+        volumes:
+            - ./minecraft-data:/data:z
+
+    minecraft-data-backup:
+        volumes:
+            - ./minecraft-data:/data:ro,z
+            - ./config:/config:z

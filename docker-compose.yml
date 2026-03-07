@@ -1,46 +1,47 @@
 services:
-  no-ip-duc:
-    image: ghcr.io/noipcom/noip-duc
-    restart: unless-stopped
-    env_file:
-      - .env
+    minecraft-server:
+        image: itzg/minecraft-server:latest
+        restart: unless-stopped
+        ports:
+            - "25565:25565"
+        volumes:
+            - ./minecraft-data:/data
 
-  minecraft-server:
-    image: itzg/minecraft-server
-    stdin_open: true
-    tty: true
-    ports:
-      - "25565:25565"
-      - "25575:25575"
-    volumes:
-      - /home/alex/minecraft-data:/data:Z
-    environment:
-      EULA: true
-      TYPE: PAPER
-      VERSION: 1.21.11
-      MEMORY: 2G
-      RCON_PASSWORD: "<REDACTED>"
-      MOTD: "WELCOME TO THE JUNGLE, PUNK"
-      REMOVE_OLD_MODS: true
-    # userns_mode: "keep-id"
-    healthcheck:
-      test: ["CMD-SHELL", "mc-health || exit 1"]
-      interval: 30s
-      timeout: 10s
-      retries: 10
-      start_period: 60s
+        environment:
+            EULA: "TRUE"
+            ENABLE_RCON: "true"
+            RCON_PORT: 25575
+            RCON_PASSWORD: ${RCON_PASSWORD:?RCON_PASSWORD is required}
 
-  minecraft-data-backup:
-    image: itzg/mc-backup
-    volumes:
-      - /home/alex/minecraft-data:/data:ro
-      - ./config:/config/rclone:Z
-    environment:
-      EXCLUDES: "*.jar,cache,*.tmp"
-      RCON_HOST: minecraft-server
-      BACKUP_METHOD: rclone
-      RCLONE_REMOTE: gdrive
-      RCLONE_DEST_DIR: "Minecraft Server Data Backups"
-    depends_on:
-      - minecraft-server
-    restart: unless-stopped
+    minecraft-data-backup:
+        image: itzg/mc-backup:latest
+        restart: unless-stopped
+        depends_on:
+            - minecraft-server
+        volumes:
+            - ./minecraft-data:/data:ro
+            - ./config:/config
+
+        environment:
+            RCON_HOST: minecraft-server
+            RCON_PORT: 25575
+            RCON_PASSWORD: ${RCON_PASSWORD:?RCON_PASSWORD is required}
+            RCON_RETRIES: 30
+            RCON_RETRY_INTERVAL: 10s
+            BACKUP_ON_STARTUP: "true"
+            BACKUP_INTERVAL: 24h
+            PRUNE_BACKUPS_COUNT: 15
+            BACKUP_METHOD: rclone
+            RCLONE_REMOTE: gdrive
+            RCLONE_DEST_DIR: "Backups/Minecraft Daily Backups"
+            EXCLUDES: "*.jar,cache,*.tmp"
+            INITIAL_DELAY: 2m
+
+    ddns-updater:
+        image: docker.io/qmcgaw/ddns-updater:latest
+        restart: unless-stopped
+
+        environment:
+            TZ: ${TZ}
+            CONFIG: >
+                {"settings":[{"provider":"noip","domain":"${NOIP_HOSTNAMES:?NOIP_HOSTNAMES is required}","username":"${NOIP_USERNAME:?NOIP_USERNAME is required}","password":"${NOIP_PASSWORD:?NOIP_PASSWORD is required}"}]}

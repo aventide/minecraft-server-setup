@@ -1,1 +1,11 @@
+# Environment secrets
 .env
+
+# Minecraft server runtime data
+minecraft-data/
+
+# Backup/rclone secrets
+config/rclone/rclone.conf
+
+# DDNS updater runtime state
+ddns-updater/
